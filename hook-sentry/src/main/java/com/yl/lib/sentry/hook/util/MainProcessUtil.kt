@@ -6,7 +6,7 @@ import android.os.Build
 import android.text.TextUtils
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-09-24 14:54
  * 主进程判断代码，绕过getRunningAppProcesses
  */

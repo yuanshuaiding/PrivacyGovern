@@ -3,7 +3,7 @@ package com.yl.lib.sentry.hook.printer
 import com.yl.lib.sentry.hook.util.PrivacyUtil
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-11-19 15:24
  * 写入文件记录的单条记录
  */

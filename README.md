@@ -224,7 +224,7 @@
 ```
     支持自定义配置hook函数
     /**
- * @author yulun
+ * @author Eric
  * @since 2022-01-13 17:57
  * 主要是两个注解PrivacyClassProxy和PrivacyMethodProxy，PrivacyClassProxy代表要解析的类，PrivacyMethodProxy代表要hook的方法配置
  */

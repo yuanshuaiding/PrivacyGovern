@@ -17,7 +17,7 @@ import com.yl.lib.sentry.hook.util.PrivacyProxyUtil.Util.doFilePrinter
 import com.yl.lib.sentry.hook.PrivacySentry
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-01-13 17:57
  * 代理ContentResolver 查增删改 ,主要是针对联系人，通讯录，日历等等
  */

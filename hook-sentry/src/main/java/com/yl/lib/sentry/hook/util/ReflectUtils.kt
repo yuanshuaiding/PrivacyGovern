@@ -3,7 +3,7 @@ package com.yl.lib.sentry.hook.util
 import java.lang.reflect.Method
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-11-10 15:06
  * https://juejin.cn/post/7018030594156134408 会触发反射数组长度的错误
  */

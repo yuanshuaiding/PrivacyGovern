@@ -6,7 +6,7 @@ import com.yl.lib.sentry.hook.util.PrivacyProxyUtil
 import java.io.File
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-10-18 10:39
  */
 class CachePrivacyManager {

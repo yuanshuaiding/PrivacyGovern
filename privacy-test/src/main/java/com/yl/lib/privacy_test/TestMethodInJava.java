@@ -6,7 +6,7 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-12-22 19:46
  */
 public class TestMethodInJava {

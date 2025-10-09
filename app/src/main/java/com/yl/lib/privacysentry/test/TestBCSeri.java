@@ -3,7 +3,7 @@ package com.yl.lib.privacysentry.test;
 import android.os.Build;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-02-25 11:37
  */
 public class TestBCSeri {

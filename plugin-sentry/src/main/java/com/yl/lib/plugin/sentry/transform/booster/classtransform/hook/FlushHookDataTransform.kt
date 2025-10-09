@@ -5,7 +5,7 @@ import com.yl.lib.plugin.sentry.util.PrivacyMoveAssetsUtil
 import org.objectweb.asm.tree.ClassNode
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-29 11:22
  */
 class FlushHookDataTransform : BaseHookTransform(){

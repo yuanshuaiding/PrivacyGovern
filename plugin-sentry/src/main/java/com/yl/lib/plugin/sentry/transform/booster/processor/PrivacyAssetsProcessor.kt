@@ -10,7 +10,7 @@ import com.yl.lib.plugin.sentry.util.privacyPrintln
 import org.gradle.api.Project
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-18 15:08
  */
 class PrivacyAssetsProcessor(private val project: Project) : VariantProcessor {

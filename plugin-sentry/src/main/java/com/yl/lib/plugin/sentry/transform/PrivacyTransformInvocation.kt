@@ -6,7 +6,7 @@ import org.gradle.api.Project
 import java.io.File
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-09 14:44
  */
 abstract class PrivacyTransformInvocation(

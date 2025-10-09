@@ -4,7 +4,7 @@ import com.yl.lib.sentry.hook.PrivacySentry
 
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-06-10 15:09
  */
 class PrivacyLog {

@@ -1,8 +1,8 @@
 package com.yl.lib.privacysentry.calendar
 
 /**
- * @author yulun
- * @sinice 2022-01-13 19:57
+ * @author Eric
+ * @since 2025-10
  */
 class RRuleConstant {
 

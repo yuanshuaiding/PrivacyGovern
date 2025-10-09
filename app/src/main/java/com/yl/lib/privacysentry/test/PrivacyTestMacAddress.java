@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-11-18 10:03
  */
 public class PrivacyTestMacAddress {

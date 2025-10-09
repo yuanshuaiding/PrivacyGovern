@@ -12,7 +12,7 @@ import com.yl.lib.sentry.hook.util.MainProcessUtil
 import com.yl.lib.sentry.hook.util.PrivacyLog
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-07-06 15:47
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

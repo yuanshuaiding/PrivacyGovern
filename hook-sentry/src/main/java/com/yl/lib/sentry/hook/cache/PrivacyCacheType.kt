@@ -1,7 +1,7 @@
 package com.yl.lib.sentry.hook.cache
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-10-14 17:55
  */
 enum class PrivacyCacheType {

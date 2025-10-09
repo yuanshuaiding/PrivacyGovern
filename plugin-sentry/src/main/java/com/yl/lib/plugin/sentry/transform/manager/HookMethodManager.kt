@@ -1,7 +1,7 @@
 package com.yl.lib.plugin.sentry.transform.manager
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-12-14 11:39
  * 汇总所有的hook方法配置
  */

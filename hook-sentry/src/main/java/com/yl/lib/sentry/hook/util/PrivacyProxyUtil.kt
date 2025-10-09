@@ -6,7 +6,7 @@ import com.yl.lib.sentry.hook.printer.PrivacyFunBean
 import com.yl.lib.sentry.hook.watcher.PrivacyDataManager
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-01-13 17:58
  */
 class PrivacyProxyUtil {

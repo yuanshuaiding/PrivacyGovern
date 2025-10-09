@@ -1,7 +1,7 @@
 package com.yl.lib.plugin.sentry.extension
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-12-13 17:28
  */
 open class PrivacyExtension {
@@ -10,6 +10,9 @@ open class PrivacyExtension {
 
     // 不修改的黑名单，首先是包括自己
     var blackList: Set<String>? = null
+
+    //永久禁止的方法(如：你的app无论如何都不允许调用getMacAddress方法）
+    var forbiddenList: Set<String>? = null
 
     // hook变量
     @Deprecated("后续准备放弃，几乎没有业务场景")

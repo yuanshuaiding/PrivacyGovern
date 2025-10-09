@@ -1,7 +1,7 @@
 package com.yl.lib.sentry.hook.cache
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-10-17 11:32
  */
 abstract class BasePrivacyCache<T> {

@@ -7,7 +7,7 @@ import java.lang.reflect.Modifier;
 import java.util.Scanner;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-29 18:04
  */
 public class ReflexObjectUtil {

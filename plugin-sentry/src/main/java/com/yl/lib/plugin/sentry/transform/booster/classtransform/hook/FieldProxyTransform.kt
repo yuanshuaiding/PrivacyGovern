@@ -9,7 +9,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldInsnNode
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-21 15:34
  * 代理PrivacyFieldProxy注解过的字段
  * @see com.yl.lib.privacy_annotation.PrivacyFieldProxy

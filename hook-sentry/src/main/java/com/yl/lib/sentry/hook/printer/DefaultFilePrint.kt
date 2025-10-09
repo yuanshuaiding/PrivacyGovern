@@ -11,7 +11,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-09-24 15:47
  * 为了可以更直观的查看统计结果，默认采用excel文件形式输出
  */

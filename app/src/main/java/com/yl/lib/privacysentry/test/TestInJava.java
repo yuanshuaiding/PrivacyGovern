@@ -34,7 +34,7 @@ import java.net.URLConnection;
 import java.util.Enumeration;
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-12-26 13:30
  */
 public class TestInJava {

@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-09-24 15:33
  */
 class PrivacyUtil {

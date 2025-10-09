@@ -4,7 +4,7 @@ import com.yl.lib.sentry.hook.util.PrivacyLog
 
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-09-24 15:46
  */
 class DefaultLogPrint : BasePrinter() {

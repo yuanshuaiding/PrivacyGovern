@@ -1,7 +1,7 @@
 package com.yl.lib.plugin.sentry.transform.manager
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-11-18 15:09
  * 类代理，暂时主要用于构造函数代理
  */

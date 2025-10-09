@@ -3,7 +3,7 @@ package com.yl.lib.sentry.hook.printer
 import com.yl.lib.sentry.hook.util.PrivacyLog
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-11-22 14:26
  */
 abstract class BaseFilePrinter : BasePrinter {

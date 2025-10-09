@@ -10,7 +10,7 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.*
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-08 10:55
  * 类代理，代理PrivacyClassReplace注解过的类
  * @see com.yl.lib.privacy_annotation.PrivacyClassReplace

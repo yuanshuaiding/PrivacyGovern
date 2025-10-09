@@ -16,7 +16,7 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-11-17 14:04
  * 处理manifest文件，目前主要针对Service
  *  1. 关闭Service的Export

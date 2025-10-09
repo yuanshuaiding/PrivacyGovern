@@ -1,7 +1,7 @@
 package com.yl.lib.plugin.sentry.transform.manager
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-08-30 11:10
  */
 open class HookFieldManager {

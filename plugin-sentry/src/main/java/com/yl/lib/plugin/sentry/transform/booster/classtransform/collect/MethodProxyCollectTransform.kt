@@ -14,7 +14,7 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.tree.ClassNode
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-08 11:08
  * @see com.yl.lib.privacy_annotation.PrivacyMethodProxy
  * 解析和收集PrivacyMethodProxy注解的方法

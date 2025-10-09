@@ -6,7 +6,7 @@ import android.text.TextUtils
 import com.yl.lib.sentry.hook.PrivacySentry
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-10-17 14:47
  * 封装部分通用函数
  */

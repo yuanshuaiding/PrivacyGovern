@@ -12,7 +12,7 @@ import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.Project
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-21 17:56
  */
 class PrivacyManifestProcessor(private val project: Project) : VariantProcessor {

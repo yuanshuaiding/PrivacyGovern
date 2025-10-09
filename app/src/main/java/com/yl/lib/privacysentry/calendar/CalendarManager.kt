@@ -17,9 +17,7 @@ import kotlin.collections.ArrayList
 
 
 /**
- * @author yulun
- * @since 2022-01-13 19:53
- * 测试日历相关 代码从 https://github.com/kylechandev/CalendarProviderManager拷贝
+ * @author Eric
  */
 class CalendarManager {
 

@@ -30,7 +30,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-12-13 17:05
  */
 class PrivacySentryPlugin : Plugin<Project> {

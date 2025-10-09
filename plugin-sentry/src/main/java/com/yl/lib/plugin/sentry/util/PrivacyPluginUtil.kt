@@ -4,7 +4,7 @@ import org.gradle.api.logging.Logger
 import kotlin.math.log
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-07-20 19:23
  */
 class PrivacyPluginUtil {

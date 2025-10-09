@@ -12,7 +12,7 @@ import java.io.File;
 import java.net.URI;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-11-18 15:01
  * 代理File的构造方法，如果是自定义的file类，需要业务方单独配置自行处理
  */

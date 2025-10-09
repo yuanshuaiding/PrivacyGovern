@@ -5,7 +5,7 @@ import org.gradle.util.GFileUtils
 import java.io.File
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-06-29 16:06
  * 把扫描生成的静态文件 写到apk assets目录下
  * todo  demo里task可以执行，但是在项目里，task注入不进去，待排查

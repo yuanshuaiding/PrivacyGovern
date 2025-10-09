@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-12-05 11:08
  * 不会被代理，黑名单注解
  */

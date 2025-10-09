@@ -19,7 +19,7 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-09-24 14:33
  */
 class PrivacySentry {

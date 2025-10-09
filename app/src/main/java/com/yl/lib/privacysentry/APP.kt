@@ -11,8 +11,8 @@ import com.yl.lib.sentry.hook.PrivacySentryBuilder
 import com.yl.lib.sentry.hook.util.PrivacyLog
 
 /**
- * @author yulun
- * @sinice 2021-11-19 10:20
+ * @author Eric
+ * @since 2025-10
  */
 class APP : Application() {
     override fun onCreate() {

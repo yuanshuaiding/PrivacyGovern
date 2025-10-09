@@ -22,7 +22,7 @@ import kotlin.jvm.functions.Function0;
 import kotlin.jvm.internal.Lambda;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-11-30 17:47
  * kotlin Boolean 和 java boolean需要特殊处理，不然方法代理不了，在这里直接用java更方便
  */

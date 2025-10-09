@@ -7,7 +7,7 @@ import com.yl.lib.sentry.hook.printer.PrivacyFunBean
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-07-05 16:26
  * 实时hook数据 管理中心，负责分发
  */

@@ -1,7 +1,7 @@
 package com.yl.lib.privacy_annotation;
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-12-31 11:12
  * 猜测是编译顺序的关系，当插件里引用这个类时，插件里是kotlin代码，opcode计算出来都是0
  */

@@ -13,7 +13,7 @@ import com.yl.lib.sentry.hook.cache.CachePrivacyManager
 import com.yl.lib.sentry.hook.util.PrivacyProxyUtil
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-06-17 17:56
  */
 @Keep

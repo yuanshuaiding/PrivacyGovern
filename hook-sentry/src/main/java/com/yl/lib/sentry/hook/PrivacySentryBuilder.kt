@@ -5,7 +5,7 @@ import com.yl.lib.sentry.hook.printer.DefaultLogPrint
 import com.yl.lib.sentry.hook.util.MainProcessUtil
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-09-24 15:07
  */
 class PrivacySentryBuilder {

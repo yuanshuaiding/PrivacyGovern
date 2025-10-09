@@ -3,7 +3,7 @@ package com.yl.lib.sentry.hook.cache
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-10-17 11:39
  */
 class MemoryCache<T> : BasePrivacyCache<T>(PrivacyCacheType.MEMORY) {

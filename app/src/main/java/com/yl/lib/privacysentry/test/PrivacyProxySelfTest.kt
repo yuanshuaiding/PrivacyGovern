@@ -10,7 +10,7 @@ import com.yl.lib.sentry.hook.util.PrivacyLog
 import java.net.HttpURLConnection
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-06-15 20:01
  */
 @Keep

@@ -11,8 +11,7 @@ import com.yl.lib.sentry.hook.util.PrivacyProxyUtil
 import com.yl.lib.sentry.hook.util.ReflectUtils
 
 /**
- * @author yulun
- * @since 2022-11-09 17:41
+ * @author Eric
  * 代理请求权限
  */
 @Keep

@@ -15,7 +15,7 @@ import com.yl.lib.sentry.hook.cache.CacheUtils
 import com.yl.lib.sentry.hook.util.PrivacyProxyUtil
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-06-17 17:56
  * 代理电话权限的部分敏感API
  */

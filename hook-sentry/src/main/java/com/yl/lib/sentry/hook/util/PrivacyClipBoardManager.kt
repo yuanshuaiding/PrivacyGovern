@@ -5,7 +5,7 @@ import com.yl.lib.sentry.hook.PrivacySentry
 import com.yl.lib.sentry.hook.cache.DiskCache
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-11-02 15:28
  */
 @Keep

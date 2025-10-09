@@ -40,7 +40,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2025-04-24 14:56
  */
 abstract class PrivacyTransformTask : DefaultTask() {

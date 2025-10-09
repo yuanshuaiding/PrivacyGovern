@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2022-01-04 10:04
  * 有这个注解的类，才会被解析
  */

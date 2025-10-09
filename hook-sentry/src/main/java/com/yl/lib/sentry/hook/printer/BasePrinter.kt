@@ -1,7 +1,7 @@
 package com.yl.lib.sentry.hook.printer
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-09-24 15:43
  */
 open class BasePrinter {

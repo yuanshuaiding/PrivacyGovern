@@ -8,7 +8,7 @@ import org.json.JSONObject;
 import java.lang.reflect.Method;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2024-04-25 15:43
  */
 public class TestOaidGetter {

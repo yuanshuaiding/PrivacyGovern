@@ -6,7 +6,7 @@ import android.os.Looper
 import com.yl.lib.sentry.hook.util.PrivacyLog
 
 /**
- * @author yulun
+ * @author Eric
  * @sinice 2021-12-01 17:32
  * 分段延时触发辅助类
  */

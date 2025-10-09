@@ -1,7 +1,7 @@
 package com.yl.lib.privacysentry.test
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2025-05-14 10:07
  */
 import android.app.Service

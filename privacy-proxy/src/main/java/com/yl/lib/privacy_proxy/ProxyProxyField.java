@@ -8,7 +8,7 @@ import com.yl.lib.privacy_annotation.PrivacyClassProxy;
 import com.yl.lib.privacy_annotation.PrivacyFieldProxy;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-03-03 19:42
  * 注意变量的初始化是在类初始化的时候就执行了，所以这里只适合hook不可变的变量
  */

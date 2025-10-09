@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2022-11-18 14:29
  * 类替换，
  */

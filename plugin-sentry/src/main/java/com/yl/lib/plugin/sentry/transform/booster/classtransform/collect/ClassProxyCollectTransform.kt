@@ -13,7 +13,7 @@ import org.objectweb.asm.Type
 import org.objectweb.asm.tree.ClassNode
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-11 11:17
  * @see com.yl.lib.privacy_annotation.PrivacyClassReplace
  * 收集待代理的类

@@ -12,7 +12,7 @@ import com.yl.lib.plugin.sentry.util.privacyClassReplace
 import org.objectweb.asm.tree.ClassNode
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-11 14:29
  */
 open class BaseHookTransform : AbsClassTransformer() {

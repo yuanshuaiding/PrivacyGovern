@@ -15,7 +15,7 @@ import org.objectweb.asm.tree.InsnNode
 import org.objectweb.asm.tree.LdcInsnNode
 
 /**
- * @author yulun
+ * @author Eric
  * @since 2023-08-08 10:55
  * 处理Service的onStartCommand方法，把返回值强行修改为
  */
