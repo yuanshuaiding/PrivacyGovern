@@ -15,23 +15,19 @@ class PrivacyProxyUtil {
             funName: String,
             methodDocumentDesc: String = "",
             args: String? = "",
+            bVisitorModel: Boolean = false,
             bCache: Boolean = false
         ) {
-            var funName = funName + "-\n线程名: ${Thread.currentThread().name}"
-            var funAlias =
-                (if (bCache) "命中缓存--" else "") + methodDocumentDesc + if (args?.isNotEmpty() == true) "--参数: $args" else ""
-            var msg = PrivacyUtil.Util.getStackTrace()
-
-            // 这里不再拦截，交给printer自己拦截
-            if (!PrivacySentry.Privacy.hasInit()) {
-                PrivacyDataManager.Manager.addStickData(PrivacyFunBean(funName, funAlias, msg, 1))
+            if (bVisitorModel || PrivacySentry.Privacy.getBuilder()?.isVisitorModel() == true) {
+                PrivacyLog.e("disable print file: funName is $funName methodDocumentDesc is $methodDocumentDesc,isVisitorModel=true")
+                return
             }
 
             PrivacySentry.Privacy.getBuilder()?.getPrinterList()?.forEach {
                 it.filePrint(
-                    funName,
-                    funAlias,
-                    msg
+                    funName + "\n线程名: ${Thread.currentThread().name}",
+                    (if (bCache) "命中缓存--" else "") + methodDocumentDesc + if (args?.isNotEmpty() == true) "--参数: $args" else "",
+                    PrivacyUtil.Util.getStackTrace()
                 )
             }
         }

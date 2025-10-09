@@ -41,8 +41,11 @@ open class PrivacyTelephonyProxy {
         @JvmStatic
         fun getMeid(manager: TelephonyManager): String? {
             var key = "meid"
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                PrivacyProxyUtil.Util.doFilePrinter(key, "移动设备标识符-getMeid()")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getMeid") == true
+            ) {
+                PrivacyProxyUtil.Util.doFilePrinter(key, "移动设备标识符-getMeid()", bVisitorModel = true)
                 return ""
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -61,8 +64,10 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "移动设备标识符-getMeid()",
-                    ""
-                ) { manager.meid }
+                    "",
+                    String::class,
+                    { manager.meid },
+                )
             }
         }
 
@@ -74,8 +79,11 @@ open class PrivacyTelephonyProxy {
         @JvmStatic
         fun getMeid(manager: TelephonyManager, index: Int): String? {
             var key = "meid"
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                PrivacyProxyUtil.Util.doFilePrinter(key, "移动设备标识符-getMeid()")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getMeid") == true
+            ) {
+                PrivacyProxyUtil.Util.doFilePrinter(key, "移动设备标识符-getMeid()", bVisitorModel = true)
                 return ""
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -92,15 +100,15 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "移动设备标识符-getMeid(I)",
-                    ""
-                ) { manager.meid }
+                    "",
+                    String::class,
+                    { manager.meid },
+                )
             }
         }
 
         var objectDeviceIdLock = Object()
 
-
-        // 配置代理拦截获取设备ID
         @PrivacyMethodProxy(
             originalClass = TelephonyManager::class,
             originalMethod = "getDeviceId",
@@ -109,9 +117,11 @@ open class PrivacyTelephonyProxy {
         @JvmStatic
         fun getDeviceId(manager: TelephonyManager): String? {
             var key = "TelephonyManager-getDeviceId"
-            // 在用户同意协议之前，拦截获取
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                PrivacyProxyUtil.Util.doFilePrinter(key, "IMEI-getDeviceId()")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getDeviceId") == true
+            ) {
+                PrivacyProxyUtil.Util.doFilePrinter(key, "IMEI-getDeviceId()", bVisitorModel = true)
                 return ""
             }
 
@@ -119,7 +129,6 @@ open class PrivacyTelephonyProxy {
                 return ""
             }
 
-            // 如果没有获得电话权限，拦截获取
             if (!PrivacyProxyUtil.Util.checkPermission(Manifest.permission.READ_PHONE_STATE)) {
                 PrivacyProxyUtil.Util.doFilePrinter(key, "IMEI-getDeviceId()-无权限")
                 return ""
@@ -128,8 +137,10 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "IMEI-getDeviceId()",
-                    ""
-                ) { manager.getDeviceId() }
+                    "",
+                    String::class,
+                    { manager.getDeviceId() },
+                )
             }
         }
 
@@ -142,10 +153,14 @@ open class PrivacyTelephonyProxy {
         fun getDeviceId(manager: TelephonyManager, index: Int): String? {
             var key = "TelephonyManager-getDeviceId-$index"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getDeviceId") == true
+            ) {
                 PrivacyProxyUtil.Util.doFilePrinter(
                     key,
-                    "IMEI-getDeviceId(I)"
+                    "IMEI-getDeviceId(I)",
+                    bVisitorModel = true
                 )
                 return ""
             }
@@ -162,8 +177,10 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "IMEI-getDeviceId(I)",
-                    ""
-                ) { manager.getDeviceId(index) }
+                    "",
+                    String::class,
+                    { manager.getDeviceId(index) },
+                )
             }
         }
 
@@ -176,10 +193,14 @@ open class PrivacyTelephonyProxy {
         fun getSubscriberId(manager: TelephonyManager): String? {
             var key = "TelephonyManager-getSubscriberId"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getSubscriberId") == true
+            ) {
                 PrivacyProxyUtil.Util.doFilePrinter(
                     key,
-                    "IMSI-getSubscriberId(I)"
+                    "IMSI-getSubscriberId(I)",
+                    bVisitorModel = true
                 )
                 return ""
             }
@@ -197,8 +218,10 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "IMSI-getSubscriberId()",
-                    ""
-                ) { manager.subscriberId }
+                    "",
+                    String::class,
+                    { manager.subscriberId },
+                )
             }
         }
 
@@ -221,8 +244,11 @@ open class PrivacyTelephonyProxy {
         fun getImei(manager: TelephonyManager): String? {
             var key = "TelephonyManager-getImei"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                PrivacyProxyUtil.Util.doFilePrinter(key, "IMEI-getImei()")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getImei") == true
+            ) {
+                PrivacyProxyUtil.Util.doFilePrinter(key, "IMEI-getImei()", bVisitorModel = true)
                 return ""
             }
 
@@ -239,8 +265,10 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "IMEI-getImei()",
-                    ""
-                ) { manager.imei }
+                    "",
+                    String::class,
+                    { manager.imei },
+                )
             }
         }
 
@@ -252,8 +280,11 @@ open class PrivacyTelephonyProxy {
         @JvmStatic
         fun getImei(manager: TelephonyManager, index: Int): String? {
             var key = "TelephonyManager-getImei-$index"
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                PrivacyProxyUtil.Util.doFilePrinter(key, "设备id-getImei(I)")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getImei") == true
+            ) {
+                PrivacyProxyUtil.Util.doFilePrinter(key, "设备id-getImei(I)", bVisitorModel = true)
                 return ""
             }
 
@@ -270,8 +301,10 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "IMEI-getImei(I)",
-                    ""
-                ) { manager.getImei(index) }
+                    "",
+                    String::class,
+                    { manager.getImei(index) },
+                )
             }
         }
 
@@ -285,10 +318,14 @@ open class PrivacyTelephonyProxy {
         @JvmStatic
         fun getSimSerialNumber(manager: TelephonyManager): String? {
             var key = "TelephonyManager-getSimSerialNumber"
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getSimSerialNumber") == true
+            ) {
                 PrivacyProxyUtil.Util.doFilePrinter(
                     key,
-                    "SIM卡-getSimSerialNumber()"
+                    "SIM卡-getSimSerialNumber()",
+                    bVisitorModel = true
                 )
                 return ""
             }
@@ -304,8 +341,10 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "SIM卡-getSimSerialNumber()",
-                    ""
-                ) { manager.getSimSerialNumber() }
+                    "",
+                    String::class,
+                    { manager.getSimSerialNumber() },
+                )
             }
         }
 
@@ -332,16 +371,21 @@ open class PrivacyTelephonyProxy {
 
             var key = "TelephonyManager-getLine1Number"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                PrivacyProxyUtil.Util.doFilePrinter(key, "手机号-getLine1Number")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getLine1Number") == true
+            ) {
+                PrivacyProxyUtil.Util.doFilePrinter(key, "手机号-getLine1Number", bVisitorModel = true)
                 return ""
             }
             synchronized(objectPhoneNumberLock) {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "手机号-getLine1Number",
-                    ""
-                ) { manager.line1Number }
+                    "",
+                    String::class,
+                    { manager.line1Number },
+                )
             }
         }
 
@@ -355,10 +399,14 @@ open class PrivacyTelephonyProxy {
         fun getSimOperator(manager: TelephonyManager): String? {
             var key = "TelephonyManager-getSimOperator"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getSimOperator") == true
+            ) {
                 PrivacyProxyUtil.Util.doFilePrinter(
                     key,
-                    "运营商信息-getSimOperator()"
+                    "运营商信息-getSimOperator()",
+                    bVisitorModel = true
                 )
                 return ""
             }
@@ -367,7 +415,8 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithMemoryCache(
                     key,
                     "运营商信息-getSimOperator()",
-                    ""
+                    "",
+                    String::class,
                 ) { manager.simOperator }
             }
         }
@@ -382,10 +431,14 @@ open class PrivacyTelephonyProxy {
         fun getNetworkOperator(manager: TelephonyManager): String? {
             var key = "TelephonyManager-getNetworkOperator"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getNetworkOperator") == true
+            ) {
                 PrivacyProxyUtil.Util.doFilePrinter(
                     key,
-                    "运营商信息-getNetworkOperator()"
+                    "运营商信息-getNetworkOperator()",
+                    bVisitorModel = true
                 )
                 return ""
             }
@@ -394,7 +447,8 @@ open class PrivacyTelephonyProxy {
                 return CachePrivacyManager.Manager.loadWithMemoryCache(
                     key,
                     "运营商信息-getNetworkOperator()",
-                    ""
+                    "",
+                    String::class,
                 ) { manager.networkOperator }
             }
         }
@@ -408,19 +462,24 @@ open class PrivacyTelephonyProxy {
         fun getSimState(manager: TelephonyManager): Int {
             var key = "TelephonyManager-getNetworkOperator"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getSimState") == true
+            ) {
                 PrivacyProxyUtil.Util.doFilePrinter(
                     key,
-                    "运营商信息-getNetworkOperator()"
+                    "运营商信息-getNetworkOperator()",
+                    bVisitorModel = true
                 )
                 return SIM_STATE_UNKNOWN
             }
 
             synchronized(objectNetworkOperatorLock) {
-                return CachePrivacyManager.Manager.loadWithTimeMemoryCache(
+                return CachePrivacyManager.Manager.loadWithTimeCache(
                     key,
                     "运营商信息-getNetworkOperator()",
                     SIM_STATE_UNKNOWN,
+                    Int::class,
                     duration = CacheUtils.Utils.MINUTE * 5
                 ) { manager.simState }
             }

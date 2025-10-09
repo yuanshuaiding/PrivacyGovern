@@ -5,14 +5,12 @@ import com.yl.lib.sentry.hook.printer.DefaultLogPrint
 import com.yl.lib.sentry.hook.util.MainProcessUtil
 
 /**
- * @author Eric
+ * @author yulun
  * @sinice 2021-09-24 15:07
  */
 class PrivacySentryBuilder {
 
-    // 默认需要关闭
-    @Volatile
-    var debug: Boolean = false
+    var debug: Boolean = true
 
     //日志输出 和 文件输出
     private var mPrinterList: ArrayList<BasePrinter>? = null
@@ -29,14 +27,19 @@ class PrivacySentryBuilder {
     // 是否激活输入日志到文件
     private var enableFileResult: Boolean = true
 
-    // 游客模式，拦截所有敏感方法，默认关闭
-    @Deprecated("弃用")
-    @Volatile
-    private var visitorModel: Boolean = false
+    // 游客模式，拦截所有敏感方法
+    private var visitorModel: Boolean = true
+
+    //是否只前台可见时放行
+    private var onlyForeground: Boolean = false
+
+    // 是否前台可见(默认true)
+    private var foreground: Boolean = true
 
     // 可以拦截读取系统剪贴板
-    @Volatile
     private var enableReadClipBoard: Boolean = true
+
+    private var forbiddenAPIs = mutableListOf<String>()
 
     constructor() {
         addPrinter(DefaultLogPrint())
@@ -102,15 +105,34 @@ class PrivacySentryBuilder {
         return this
     }
 
-    @Deprecated("弃用")
     fun configVisitorModel(visitorModel: Boolean): PrivacySentryBuilder {
         this.visitorModel = visitorModel
         return this
     }
 
-    @Deprecated("弃用")
+    fun onlyForeground(onlyForeground: Boolean): PrivacySentryBuilder {
+        this.onlyForeground = onlyForeground
+        return this
+    }
+
     fun isVisitorModel(): Boolean {
+        if (onlyForeground) {
+            return visitorModel && foreground
+        }
         return visitorModel
+    }
+
+    fun addForbiddenAPI(method: String): PrivacySentryBuilder {
+        if (forbiddenAPIs == null) {
+            forbiddenAPIs = mutableListOf()
+        }
+        forbiddenAPIs.add(method)
+        return this
+    }
+
+    fun isForbiddenAPI(method: String): Boolean {
+        if (forbiddenAPIs.isNullOrEmpty()) return false
+        return forbiddenAPIs.contains(method)
     }
 
     fun enableFileResult(enableFileResult: Boolean): PrivacySentryBuilder {
@@ -129,6 +151,11 @@ class PrivacySentryBuilder {
 
     fun isEnableReadClipBoard(): Boolean {
         return enableReadClipBoard
+    }
+
+    fun configForegroundModel(foreground: Boolean): PrivacySentryBuilder {
+        this.foreground = foreground
+        return this
     }
 
 }

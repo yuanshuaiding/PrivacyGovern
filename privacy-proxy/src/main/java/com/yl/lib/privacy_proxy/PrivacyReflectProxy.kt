@@ -3,11 +3,12 @@ package com.yl.lib.privacy_proxy
 import android.bluetooth.BluetoothAdapter
 import android.net.wifi.WifiInfo
 import android.telephony.TelephonyManager
+import android.text.TextUtils
+import android.util.Log
 import androidx.annotation.Keep
 import com.yl.lib.privacy_annotation.MethodInvokeOpcode
 import com.yl.lib.privacy_annotation.PrivacyClassProxy
 import com.yl.lib.privacy_annotation.PrivacyMethodProxy
-import com.yl.lib.sentry.hook.cache.CachePrivacyManager
 import com.yl.lib.sentry.hook.util.PrivacyProxyUtil
 import java.lang.reflect.Method
 import java.net.NetworkInterface
@@ -24,7 +25,7 @@ open class PrivacyReflectProxy {
     @PrivacyClassProxy
     object ReflectProxy {
 
-        // 这个方法的注册放在了PrivacyProxyCall2中，提供了一个java注册的例子
+        //成员方法反射调用代理
         @PrivacyMethodProxy(
             originalClass = Method::class,
             originalMethod = "invoke",
@@ -102,21 +103,13 @@ open class PrivacyReflectProxy {
                 }
             }
 
-            // 针对OAID AAID VAID的方法，特殊处理，不做映射了
-            var methodName = method.name.toUpperCase()
-            if (methodName.contains("OAID") || methodName.contains("AAID") || methodName.contains("VAID")){
-                val cacheKey = obj?.javaClass?.name +"_"+ method.name
-                PrivacyProxyUtil.Util.doFilePrinter("methodName", cacheKey)
-                return CachePrivacyManager.Manager.loadWithMemoryCache(
-                    cacheKey,
-                    cacheKey,
-                    ""
-                ) { method.invoke(obj, *args) }
-            }
+            //未拦截的反射，在此处打印
+            PrivacyProxyUtil.Util.doFilePrinter(
+                method.name,
+                "未代理的方法${method.name}：args=$args",
+                bVisitorModel = false
+            )
 
-            if (obj?.javaClass?.name?.equals("com.android.id.impl.IdProviderImpl") == true){
-                return method.invoke(obj, *args)
-            }
             return method.invoke(obj, *args)
         }
     }

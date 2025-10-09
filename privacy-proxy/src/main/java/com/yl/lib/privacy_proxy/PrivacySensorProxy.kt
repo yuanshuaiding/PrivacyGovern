@@ -107,21 +107,26 @@ open class PrivacySensorProxy {
             originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
         )
         @JvmStatic
-        fun getSensorList(sensorManager: SensorManager?, type: Int): List<Sensor>? {
+        fun getSensorList(sensorManager: SensorManager?, type: Int): List<*> {
             var logPair = transformSensorTypeToString(type)
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getSensorList") == true
+            ) {
                 PrivacyProxyUtil.Util.doFilePrinter(
                     "getSensorList-$type",
-                    "获取${logPair.first}-${logPair.second}"
+                    "获取${logPair.first}-${logPair.second}",
+                    bVisitorModel = true
                 )
-                return emptyList()
+                return emptyList<Sensor>()
             }
-            return CachePrivacyManager.Manager.loadWithMemoryCache<List<Sensor>>(
+            return CachePrivacyManager.Manager.loadWithMemoryCache(
                 "getSensorList-$type",
                 "获取${logPair.first}-${logPair.second}",
-                emptyList()
+                emptyList<Sensor>(),
+                List::class
             ) {
-                sensorManager?.getSensorList(type) ?: emptyList()
+                sensorManager?.getSensorList(type) ?: emptyList<Sensor>()
             }
         }
 
@@ -130,7 +135,7 @@ open class PrivacySensorProxy {
             sensor?.let {
                 var sensorType: String? = ""
                 var sensorDesc: String? = ""
-                var logPair = transformSensorTypeToString(sensor?.type ?: 0)
+                val logPair = transformSensorTypeToString(sensor.type)
                 sensorType = logPair.first
                 sensorDesc = logPair.second
                 PrivacyProxyUtil.Util.doFilePrinter(

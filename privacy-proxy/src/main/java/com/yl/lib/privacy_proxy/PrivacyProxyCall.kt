@@ -6,10 +6,14 @@ import android.bluetooth.BluetoothAdapter
 import android.content.*
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.pm.*
+import android.database.sqlite.SQLiteOpenHelper
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.net.ConnectivityManager
 import android.net.DhcpInfo
+import android.net.Network
+import android.net.NetworkInfo
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiInfo
@@ -19,8 +23,10 @@ import android.os.Environment
 import android.provider.Settings
 import android.telephony.CellInfo
 import android.telephony.TelephonyManager
+import android.util.Base64
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import com.yl.lib.privacy_annotation.MethodInvokeOpcode
 import com.yl.lib.privacy_annotation.PrivacyClassProxy
 import com.yl.lib.privacy_annotation.PrivacyMethodProxy
@@ -33,8 +39,10 @@ import com.yl.lib.sentry.hook.util.PrivacyProxyUtil.Util.doFilePrinter
 import com.yl.lib.sentry.hook.util.PrivacyUtil
 import java.io.File
 import java.net.Inet4Address
+import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.NetworkInterface
+import java.util.concurrent.Executor
 
 /**
  * @author Eric
@@ -60,7 +68,10 @@ open class PrivacyProxyCall {
             maxNum: Int
         ): List<ActivityManager.RunningTaskInfo?>? {
             doFilePrinter("getRunningTasks", methodDocumentDesc = "当前运行中的任务")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getRunningTasks") == true
+            ) {
                 return emptyList()
             }
             return manager.getRunningTasks(maxNum)
@@ -78,7 +89,10 @@ open class PrivacyProxyCall {
             flags: Int
         ): List<ActivityManager.RecentTaskInfo>? {
             doFilePrinter("getRecentTasks", methodDocumentDesc = "最近运行中的任务")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getRecentTasks") == true
+            ) {
                 return emptyList()
             }
             return manager.getRecentTasks(maxNum, flags)
@@ -93,7 +107,10 @@ open class PrivacyProxyCall {
         @JvmStatic
         fun getRunningAppProcesses(manager: ActivityManager): List<ActivityManager.RunningAppProcessInfo> {
             doFilePrinter("getRunningAppProcesses", methodDocumentDesc = "当前运行中的进程")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getRunningAppProcesses") == true
+            ) {
                 return emptyList()
             }
 
@@ -114,8 +131,14 @@ open class PrivacyProxyCall {
         )
         @JvmStatic
         fun getInstalledPackages(manager: PackageManager, flags: Int): List<PackageInfo> {
-            doFilePrinter("getInstalledPackages", methodDocumentDesc = "安装包-getInstalledPackages")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            doFilePrinter(
+                "getInstalledPackages",
+                methodDocumentDesc = "安装包列表-getInstalledPackages-${flags}"
+            )
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getInstalledPackages") == true
+            ) {
                 return emptyList()
             }
             return manager.getInstalledPackages(flags)
@@ -129,22 +152,53 @@ open class PrivacyProxyCall {
         )
         @JvmStatic
         fun getPackageInfo(
-            manager: PackageManager, versionedPackage: VersionedPackage,
+            manager: PackageManager,
+            versionedPackage: VersionedPackage,
             flags: Int
         ): PackageInfo? {
 
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                doFilePrinter(
-//                    "getPackageInfo",
-//                    methodDocumentDesc = "安装包-getPackageInfo-${versionedPackage.packageName}",
-//                    bVisitorModel = true
-//                )
-//                throw PackageManager.NameNotFoundException("getPackageInfo-${versionedPackage.packageName}")
-//            }
-            doFilePrinter(
-                "getPackageInfo",
-                methodDocumentDesc = "安装包-getPackageInfo-${versionedPackage.packageName}"
-            )
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getPackageInfo") == true
+            ) {
+                doFilePrinter(
+                    "getPackageInfo",
+                    methodDocumentDesc = "安装包-getPackageInfo-$versionedPackage",
+                    bVisitorModel = true
+                )
+                return null
+            }
+
+            // 增加缓存
+            try {
+                val value = CachePrivacyManager.Manager.loadWithTimeCache(
+                    "getPackageInfo-$flags-${versionedPackage.packageName}",
+                    "getPackageInfo",
+                    "NameNotFoundException",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 30
+                ) {
+                    doFilePrinter(
+                        "getPackageInfo-$flags-${versionedPackage.packageName}",
+                        methodDocumentDesc = "安装包-getPackageInfo-$flags-$versionedPackage"
+                    )
+                    val p = manager.getPackageInfo(versionedPackage, flags)
+                    val byte = ParcelableUtil.marshall(p)
+                    Base64.encodeToString(byte, 0)
+                }
+                if ("NameNotFoundException" == value) {
+                    return null
+                }
+                val parcel = ParcelableUtil.unmarshall(Base64.decode(value, 0))
+                val pkg = PackageInfo.CREATOR.createFromParcel(parcel)
+                if (pkg != null && !pkg.packageName.isNullOrEmpty()) {
+                    PrivacyLog.i("getPackageInfo-$flags-$versionedPackage :成功从缓存获取对象")
+                    return pkg
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             return manager.getPackageInfo(versionedPackage, flags)
         }
 
@@ -159,18 +213,48 @@ open class PrivacyProxyCall {
             packageName: String,
             flags: Int
         ): PackageInfo? {
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                doFilePrinter(
-//                    "getPackageInfo",
-//                    methodDocumentDesc = "安装包-getPackageInfo-${packageName}",
-//                    bVisitorModel = true
-//                )
-//                throw PackageManager.NameNotFoundException("getPackageInfo-${packageName}")
-//            }
-            doFilePrinter(
-                "getPackageInfo",
-                methodDocumentDesc = "安装包-getPackageInfo-${packageName}"
-            )
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getPackageInfo") == true
+            ) {
+                doFilePrinter(
+                    "getPackageInfo-$flags",
+                    methodDocumentDesc = "安装包-getPackageInfo-$flags-${packageName}",
+                    bVisitorModel = true
+                )
+                return null
+            }
+
+            // 增加缓存
+            try {
+                val value = CachePrivacyManager.Manager.loadWithTimeCache(
+                    "getPackageInfo-$flags-${packageName}",
+                    "getPackageInfo",
+                    "NameNotFoundException",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 30
+                ) {
+                    doFilePrinter(
+                        "getPackageInfo-$flags-${packageName}",
+                        methodDocumentDesc = "安装包-getPackageInfo-$flags"
+                    )
+                    val p = manager.getPackageInfo(packageName, flags)
+                    val byte = ParcelableUtil.marshall(p)
+                    Base64.encodeToString(byte, 0)
+                }
+                if ("NameNotFoundException" == value) {
+                    return null
+                }
+                val parcel = ParcelableUtil.unmarshall(Base64.decode(value, 0))
+                val pkg = PackageInfo.CREATOR.createFromParcel(parcel)
+                if (pkg != null && !pkg.packageName.isNullOrEmpty()) {
+                    PrivacyLog.i("getPackageInfo-$flags-${packageName} :成功从缓存获取对象")
+                    return pkg
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             return manager.getPackageInfo(packageName, flags)
         }
 
@@ -189,9 +273,6 @@ open class PrivacyProxyCall {
                 "getInstalledPackagesAsUser",
                 methodDocumentDesc = "安装包-getInstalledPackagesAsUser"
             )
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                return emptyList()
-//            }
             return getInstalledPackages(manager, flags);
         }
 
@@ -206,9 +287,12 @@ open class PrivacyProxyCall {
                 "getInstalledApplications",
                 methodDocumentDesc = "安装包-getInstalledApplications"
             )
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                return emptyList()
-//            }
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getInstalledApplications") == true
+            ) {
+                return emptyList()
+            }
             return manager.getInstalledApplications(flags)
         }
 
@@ -226,9 +310,6 @@ open class PrivacyProxyCall {
                 "getInstalledApplicationsAsUser",
                 methodDocumentDesc = "安装包-getInstalledApplicationsAsUser"
             )
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                return emptyList()
-//            }
             return getInstalledApplications(manager, flags);
         }
 
@@ -269,7 +350,7 @@ open class PrivacyProxyCall {
                 legal = false
             }
 
-            //不指定包名，我们认为这个查询不合法
+            // 不指定包名，我们认为这个查询不合法
             if (!paramBuilder.contains("packageName")) {
                 legal = false
             }
@@ -278,7 +359,10 @@ open class PrivacyProxyCall {
                 "queryIntentActivities",
                 methodDocumentDesc = "读安装列表-queryIntentActivities${paramBuilder?.toString()}"
             )
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("queryIntentActivities") == true
+            ) {
                 return emptyList()
             }
             return manager.queryIntentActivities(intent, flags)
@@ -301,7 +385,10 @@ open class PrivacyProxyCall {
                 "queryIntentActivityOptions",
                 methodDocumentDesc = "读安装列表-queryIntentActivityOptions"
             )
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("queryIntentActivityOptions") == true
+            ) {
                 return emptyList()
             }
             return manager.queryIntentActivityOptions(caller, specifics, intent, flags)
@@ -320,7 +407,10 @@ open class PrivacyProxyCall {
         )
         fun getAllCellInfo(manager: TelephonyManager): List<CellInfo>? {
             doFilePrinter("getAllCellInfo", methodDocumentDesc = "定位-基站信息")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getAllCellInfo") == true
+            ) {
                 return emptyList()
             }
             return manager.getAllCellInfo()
@@ -333,7 +423,10 @@ open class PrivacyProxyCall {
         )
         @JvmStatic
         fun getPrimaryClip(manager: ClipboardManager): ClipData? {
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getPrimaryClip") == true
+            ) {
                 return ClipData.newPlainText("Label", "")
             }
             if (!PrivacyClipBoardManager.isReadClipboardEnable()) {
@@ -352,7 +445,10 @@ open class PrivacyProxyCall {
         )
         @JvmStatic
         fun getPrimaryClipDescription(manager: ClipboardManager): ClipDescription? {
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getPrimaryClipDescription") == true
+            ) {
                 return ClipDescription("", arrayOf(MIMETYPE_TEXT_PLAIN))
             }
 
@@ -373,7 +469,10 @@ open class PrivacyProxyCall {
         @JvmStatic
         fun getText(manager: ClipboardManager): CharSequence? {
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getText") == true
+            ) {
                 return ""
             }
 
@@ -391,13 +490,15 @@ open class PrivacyProxyCall {
             originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
         )
         @JvmStatic
-        fun setPrimaryClip(manager: ClipboardManager, clip: ClipData?) {
+        fun setPrimaryClip(manager: ClipboardManager, clip: ClipData) {
             doFilePrinter("setPrimaryClip", "设置剪贴板内容-setPrimaryClip")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("setPrimaryClip") == true
+            ) {
                 return
             }
-            clip?.let { manager.setPrimaryClip(it) }
-
+            manager.setPrimaryClip(clip)
         }
 
         @PrivacyMethodProxy(
@@ -406,9 +507,12 @@ open class PrivacyProxyCall {
             originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
         )
         @JvmStatic
-        fun setText(manager: ClipboardManager, clip: CharSequence?) {
+        fun setText(manager: ClipboardManager, clip: CharSequence) {
             doFilePrinter("setText", "设置剪贴板内容-setText")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("setText") == true
+            ) {
                 return
             }
             manager.text = clip
@@ -424,20 +528,27 @@ open class PrivacyProxyCall {
             originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
         )
         fun getSSID(manager: WifiInfo): String? {
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                doFilePrinter("getSSID", "SSID")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getSSID") == true
+            ) {
+                doFilePrinter("getSSID", "SSID", bVisitorModel = true)
                 return ""
             }
 
-            var key = "getSSID"
-            doFilePrinter("getSSID", "SSID")
-//            return CachePrivacyManager.Manager.loadWithTimeMemoryCache(
-//                key,
-//                "getSSID",
-//                "",
-//                duration = CacheUtils.Utils.MINUTE * 5
-//                ) { manager.ssid }
-            return manager.ssid
+            val key = "getSSID"
+            synchronized(objectSSID) {
+                return CachePrivacyManager.Manager.loadWithTimeCache(
+                    key,
+                    "getSSID",
+                    "",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 5
+                ) {
+                    doFilePrinter(key,"隐私API获取-getSSID", "getSSID")
+                    manager.ssid
+                }
+            }
         }
 
         /**
@@ -451,20 +562,27 @@ open class PrivacyProxyCall {
         )
         fun getBSSID(manager: WifiInfo): String? {
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                doFilePrinter("getBSSID", "getBSSID")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getBSSID") == true
+            ) {
+                doFilePrinter("getBSSID", "getBSSID", bVisitorModel = true)
                 return ""
             }
 
-            var key = "getBSSID"
-            doFilePrinter("getBSSID", "getBSSID")
-//            return CachePrivacyManager.Manager.loadWithTimeMemoryCache(
-//                key,
-//                "getBSSID",
-//                "",
-//                duration = CacheUtils.Utils.MINUTE * 5
-//            ) { manager.ssid }
-            return manager.bssid
+            val key = "getBSSID"
+            synchronized(objectBSSID) {
+                return CachePrivacyManager.Manager.loadWithTimeCache(
+                    key,
+                    "getBSSID",
+                    "",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 5
+                ) {
+                    doFilePrinter(key,"隐私API获取-getBSSID", "getBSSID")
+                    manager.bssid
+                }
+            }
         }
 
         /**
@@ -476,20 +594,53 @@ open class PrivacyProxyCall {
             originalMethod = "getScanResults",
             originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
         )
-        fun getScanResults(manager: WifiManager): List<ScanResult>? {
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                doFilePrinter("getScanResults", "WIFI扫描结果")
-                return emptyList()
+        fun getScanResults(manager: WifiManager): List<*> {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getScanResults") == true
+            ) {
+                doFilePrinter("getScanResults", "WIFI扫描结果", bVisitorModel = true)
+                return emptyList<ScanResult>()
             }
-            doFilePrinter("getScanResults", "WIFI扫描结果")
+
             var key = "getScanResults"
-            return CachePrivacyManager.Manager.loadWithTimeMemoryCache(
+            return CachePrivacyManager.Manager.loadWithTimeCache(
                 key,
                 "getScanResults",
-                emptyList(),
+                emptyList<ScanResult>(),
+                List::class,
                 duration = CacheUtils.Utils.MINUTE * 5
             ) { manager.scanResults }
         }
+
+        /**
+         * WIFI扫描结果
+         */
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = WifiManager::class,
+            originalMethod = "isWifiEnabled",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun isWifiEnabled(manager: WifiManager): Boolean {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("isWifiEnabled") == true
+            ) {
+                doFilePrinter("isWifiEnabled", "读取WiFi状态", bVisitorModel = true)
+                return true
+            }
+
+            var key = "isWifiEnabled"
+            return CachePrivacyManager.Manager.loadWithTimeCache(
+                key,
+                "isWifiEnabled",
+                true,
+                Boolean::class,
+                duration = CacheUtils.Utils.MINUTE * 5
+            ) { manager.isWifiEnabled }
+        }
+
 
         /**
          * DHCP信息
@@ -502,7 +653,10 @@ open class PrivacyProxyCall {
         )
         fun getDhcpInfo(manager: WifiManager): DhcpInfo? {
             doFilePrinter("getDhcpInfo", "DHCP地址")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getDhcpInfo") == true
+            ) {
                 return null
             }
             return manager.getDhcpInfo()
@@ -520,7 +674,10 @@ open class PrivacyProxyCall {
         )
         fun getConfiguredNetworks(manager: WifiManager): List<WifiConfiguration>? {
             doFilePrinter("getConfiguredNetworks", "前台用户配置的所有网络的列表")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getConfiguredNetworks") == true
+            ) {
                 return emptyList()
             }
             return manager.getConfiguredNetworks()
@@ -540,25 +697,26 @@ open class PrivacyProxyCall {
         fun getLastKnownLocation(
             manager: LocationManager, provider: String
         ): Location? {
-            var key = "getLastKnownLocation_${provider}"
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                doFilePrinter("getLastKnownLocation", "上一次的位置信息")
+            val key = "getLastKnownLocation"
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getLastKnownLocation") == true
+            ) {
+                doFilePrinter("getLastKnownLocation", "上一次的位置信息", bVisitorModel = true)
                 // 这里直接写空可能有风险
                 return null
             }
 
-            var locationStr = CachePrivacyManager.Manager.loadWithTimeDiskCache(
+            val locationStr = CachePrivacyManager.Manager.loadWithTimeCache(
                 key,
                 "上一次的位置信息",
-                ""
+                "",
+                String::class,
             ) { PrivacyUtil.Util.formatLocation(manager.getLastKnownLocation(provider)) }
 
-            var location: Location? = null
+            var location: Location?
             locationStr.also {
                 location = PrivacyUtil.Util.formatLocation(it)
-            }
-            if (location == null) {
-                return manager.getLastKnownLocation(provider)
             }
             return location
         }
@@ -576,7 +734,10 @@ open class PrivacyProxyCall {
             listener: LocationListener
         ) {
             doFilePrinter("requestLocationUpdates", "监视精细行动轨迹")
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("requestLocationUpdates") == true
+            ) {
                 return
             }
             manager.requestLocationUpdates(provider, minTime, minDistance, listener)
@@ -588,6 +749,8 @@ open class PrivacyProxyCall {
         var objectSNLock = Object()
         var objectAndroidIdLock = Object()
         var objectExternalStorageDirectoryLock = Object()
+        var objectSSID = Object()
+        var objectBSSID = Object()
 
 
         @PrivacyMethodProxy(
@@ -599,23 +762,26 @@ open class PrivacyProxyCall {
         fun getMacAddress(manager: WifiInfo): String? {
             var key = "WifiInfo-getMacAddress"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getMacAddress") == true
+            ) {
                 doFilePrinter(
                     key,
-                    "mac地址-getMacAddress"
+                    "mac地址-getMacAddress",
+                    bVisitorModel = true
                 )
                 return ""
             }
-            doFilePrinter(
-                key,
-                "mac地址-getMacAddress"
-            )
+
             synchronized(objectMacLock) {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "mac地址-getMacAddress",
-                    ""
-                ) { manager.getMacAddress() }
+                    "",
+                    String::class,
+                    { manager.getMacAddress() },
+                )
             }
         }
 
@@ -629,22 +795,23 @@ open class PrivacyProxyCall {
         fun getHardwareAddress(manager: NetworkInterface): ByteArray? {
             var key = "NetworkInterface-getHardwareAddress"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getHardwareAddress") == true
+            ) {
                 doFilePrinter(
                     key,
-                    "mac地址-getHardwareAddress"
+                    "mac地址-getHardwareAddress",
+                    bVisitorModel = true
                 )
                 return ByteArray(1)
             }
-            doFilePrinter(
-                key,
-                "mac地址-getHardwareAddress"
-            )
             synchronized(objectHardMacLock) {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "mac地址-getHardwareAddress",
-                    ""
+                    "",
+                    String::class,
                 ) { manager.hardwareAddress.toString() }.toByteArray()
             }
         }
@@ -660,16 +827,19 @@ open class PrivacyProxyCall {
         fun getAddress(manager: BluetoothAdapter): String? {
             var key = "BluetoothAdapter-getAddress"
 
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                doFilePrinter(key, "蓝牙地址-getAddress")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getAddress") == true
+            ) {
+                doFilePrinter(key, "蓝牙地址-getAddress", bVisitorModel = true)
                 return ""
             }
-            doFilePrinter(key, "蓝牙地址-getAddress")
             synchronized(objectBluetoothLock) {
                 return CachePrivacyManager.Manager.loadWithMemoryCache(
                     key,
                     "蓝牙地址-getAddress",
-                    ""
+                    "",
+                    String::class,
                 ) { manager.address }
             }
         }
@@ -682,18 +852,33 @@ open class PrivacyProxyCall {
         )
         @JvmStatic
         fun getAddress(manager: Inet4Address): ByteArray? {
-            var key = "ip地址-getAddress"
+            val key = "Inet4Address-getAddress"
 
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                doFilePrinter(key, "ip地址-getAddress")
-//                return ByteArray(1)
-//            }
-            var address = manager.address
-            doFilePrinter(
-                key,
-                "ip地址-getAddress-${manager.address ?: ""} , address is ${address ?: ""}"
-            )
-            return address
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getAddress") == true
+            ) {
+                doFilePrinter(key, "Inet4Address-ip地址-getAddress", bVisitorModel = true)
+                return ByteArray(1)
+            }
+            synchronized(objectMacLock) {
+                val value= CachePrivacyManager.Manager.loadWithTimeCache(
+                    key,
+                    "Inet4Address-ip地址-getAddress",
+                    Base64.encodeToString(ByteArray(1),0),
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 2
+                ) {
+                    val address = manager.address
+                    doFilePrinter(
+                        key,
+                        "隐私API获取-Inet4Address-getAddress , address is ${address ?: ""}"
+                    )
+                    Base64.encodeToString(address ?: ByteArray(1),0)
+                }
+
+                return Base64.decode(value, 0)
+            }
         }
 
         @PrivacyMethodProxy(
@@ -703,18 +888,34 @@ open class PrivacyProxyCall {
         )
         @JvmStatic
         fun getAddress(manager: InetAddress): ByteArray? {
-            var key = "ip地址-getAddress"
+            val key = "InetAddress-getAddress"
 
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                doFilePrinter(key, "ip地址-getAddress")
-//                return ByteArray(1)
-//            }
-            var address = manager.address
-            doFilePrinter(
-                key,
-                "ip地址-getAddress-${manager.address ?: ""} , address is ${address ?: ""} "
-            )
-            return address
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getAddress") == true
+            ) {
+                doFilePrinter(key, "ip地址-getAddress", bVisitorModel = true)
+                return ByteArray(1)
+            }
+            synchronized(objectMacLock) {
+                val value = CachePrivacyManager.Manager.loadWithTimeCache(
+                    key,
+                    "InetAddress-ip地址-getAddress",
+                    Base64.encodeToString(ByteArray(1), 0),
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 2
+                ) {
+                    val address = manager.address
+                    doFilePrinter(
+                        key,
+                        "隐私API获取-InetAddress-getAddress , address is ${address ?: ""}"
+                    )
+                    Base64.encodeToString(address ?: ByteArray(1), 0)
+                }
+
+
+                return Base64.decode(value, 0)
+            }
         }
 
         @PrivacyMethodProxy(
@@ -724,19 +925,65 @@ open class PrivacyProxyCall {
         )
         @JvmStatic
         fun getHostAddress(manager: Inet4Address): String? {
-            var key = "ip地址-getHostAddress"
+            val key = "Inet4Address-getHostAddress"
 
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                doFilePrinter(key, "ip地址-getHostAddress")
-//                return ""
-//            }
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getHostAddress") == true
+            ) {
+                doFilePrinter(key, "Inet4Address-ip地址-getHostAddress", bVisitorModel = true)
+                return ""
+            }
+            synchronized(objectMacLock) {
+                return CachePrivacyManager.Manager.loadWithTimeCache(
+                    key,
+                    "Inet4Address-ip地址-getHostAddress",
+                    "",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 2
+                ) {
+                    val address = manager.hostAddress
+                    doFilePrinter(
+                        key,
+                        "隐私API获取-Inet4Address-getHostAddress , address is ${address ?: ""}"
+                    )
+                    address ?: ""
+                }
+            }
+        }
 
-            var address = manager.hostAddress
-            doFilePrinter(
-                key,
-                "ip地址-getHostAddress-${manager.hostAddress ?: ""} , address is ${address ?: ""}"
-            )
-            return address
+        @PrivacyMethodProxy(
+            originalClass = Inet6Address::class,
+            originalMethod = "getHostAddress",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        @JvmStatic
+        fun getHostAddress(manager: Inet6Address): String? {
+            val key = "Inet6Address-getHostAddress"
+
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getHostAddress") == true
+            ) {
+                doFilePrinter(key, "Inet6Address-ip地址-getHostAddress", bVisitorModel = true)
+                return ""
+            }
+            synchronized(objectMacLock){
+                return CachePrivacyManager.Manager.loadWithTimeCache(
+                    key,
+                    "Inet6Address-ip地址-getHostAddress",
+                    "",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 2
+                ) {
+                    val address = manager.hostAddress
+                    doFilePrinter(
+                        key,
+                        "隐私API获取-Inet6Address-getHostAddress , address is ${address ?: ""}"
+                    )
+                    address ?: ""
+                }
+            }
         }
 
         @PrivacyMethodProxy(
@@ -746,22 +993,33 @@ open class PrivacyProxyCall {
         )
         @JvmStatic
         fun getHostAddress(manager: InetAddress): String? {
-            var key = "ip地址-getHostAddress"
+            val key = "InetAddress-getHostAddress"
 
-//            if (PrivacySentry.Privacy.inDangerousState()) {
-//                doFilePrinter(key, "ip地址-getHostAddress")
-//                return ""
-//            }
-
-            var address = manager.hostAddress
-            doFilePrinter(
-                key,
-                "ip地址-getHostAddress-${manager.hostAddress ?: ""} , address is ${address ?: ""}"
-            )
-            return address
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getHostAddress") == true
+            ) {
+                doFilePrinter(key, "InetAddress-ip地址-getHostAddress", bVisitorModel = true)
+                return ""
+            }
+            synchronized(objectMacLock) {
+                return CachePrivacyManager.Manager.loadWithTimeCache(
+                    key,
+                    "InetAddress-ip地址-getHostAddress",
+                    "",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 2
+                ) {
+                    val address = manager.hostAddress
+                    doFilePrinter(
+                        key,
+                        "隐私API获取-InetAddress-getHostAddress , address is ${address ?: ""}"
+                    )
+                    address ?: ""
+                }
+            }
         }
 
-        // 拦截获取敏感字段 Android_id
         @PrivacyMethodProxy(
             originalClass = Settings.Secure::class,
             originalMethod = "getString",
@@ -776,27 +1034,24 @@ open class PrivacyProxyCall {
                     type
                 )
             }
-
-            // 在用户同意协议之前，拦截获取Android_id
-            if (PrivacySentry.Privacy.inDangerousState()) {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getString") == true
+            ) {
                 doFilePrinter(
                     "getString",
                     "系统信息",
-                    args = type
+                    args = type,
+                    bVisitorModel = true
                 )
                 return ""
             }
-            doFilePrinter(
-                "getString",
-                "系统信息_android_id",
-                args = type
-            )
-            // 控制读取频率，增加多线程磁盘缓存，保证APP只读取一次Android_id，防止三方SDK或者多次启动频繁读取Android_id
             synchronized(objectAndroidIdLock) {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "getString-系统信息",
-                    ""
+                    "",
+                    String::class,
                 ) {
                     Settings.Secure.getString(
                         contentResolver,
@@ -826,16 +1081,19 @@ open class PrivacyProxyCall {
         fun getSerial(): String? {
             var result = ""
             var key = "getSerial"
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                doFilePrinter("getSerial", "Serial")
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getSerial") == true
+            ) {
+                doFilePrinter("getSerial", "Serial", bVisitorModel = true)
                 return ""
             }
-            doFilePrinter("getSerial", "Serial")
             synchronized(objectSNLock) {
                 return CachePrivacyManager.Manager.loadWithDiskCache(
                     key,
                     "getSerial",
-                    ""
+                    "",
+                    String::class,
                 ) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         Build.getSerial()
@@ -855,15 +1113,19 @@ open class PrivacyProxyCall {
         fun getExternalStorageDirectory(): File? {
             var result: File? = null
             var key = "externalStorageDirectory"
-            if (PrivacySentry.Privacy.inDangerousState()) {
-                doFilePrinter("getExternalStorageDirectory", key)
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getExternalStorageDirectory") == true
+            ) {
+                doFilePrinter("getExternalStorageDirectory", key, bVisitorModel = true)
+                return null
             }
-            doFilePrinter("getExternalStorageDirectory", key)
             synchronized(objectExternalStorageDirectoryLock) {
                 result = CachePrivacyManager.Manager.loadWithMemoryCache<File>(
                     key,
                     "getExternalStorageDirectory",
-                    File("")
+                    File(""),
+                    File::class,
                 ) {
                     Environment.getExternalStorageDirectory()
                 }
@@ -879,10 +1141,349 @@ open class PrivacyProxyCall {
             return CachePrivacyManager.Manager.loadWithMemoryCache(
                 key,
                 "getBrand",
-                ""
+                "",
+                String::class,
             ) {
                 PrivacyLog.i("getBrand Value")
                 Build.BRAND
+            }
+        }
+
+        // 拦截经纬度-getLatitude
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = Location::class,
+            originalMethod = "getLatitude",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun getLatitude(location: Location): Double {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getLatitude") == true
+            ) {
+                doFilePrinter("getLatitude", "经纬度latitude", bVisitorModel = true)
+                return 0.0
+            }
+
+            val key = "getLatitude"
+            doFilePrinter("getLatitude", "经纬度latitude")
+            return CachePrivacyManager.Manager.loadWithTimeCache(
+                key,
+                "getLatitude",
+                0.0,
+                Double::class,
+                duration = CacheUtils.Utils.MINUTE * 5
+            ) {
+                location.latitude
+            }
+        }
+
+        // 拦截经纬度-getLongitude
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = Location::class,
+            originalMethod = "getLongitude",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun getLongitude(location: Location): Double {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+                    ?.isForbiddenAPI("getLongitude") == true
+            ) {
+                doFilePrinter("getLongitude", "经纬度longitude", bVisitorModel = true)
+                return 0.0
+            }
+
+            val key = "getLongitude"
+            doFilePrinter("getLongitude", "经纬度longitude")
+            return CachePrivacyManager.Manager.loadWithTimeCache(
+                key,
+                "getLongitude",
+                0.0,
+                Double::class,
+                duration = CacheUtils.Utils.MINUTE * 5
+            ) {
+                location.longitude
+            }
+        }
+
+        // 拦截网络状态-getActiveNetworkInfo
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = ConnectivityManager::class,
+            originalMethod = "getActiveNetworkInfo",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun getActiveNetworkInfo(connectivityManager: ConnectivityManager): NetworkInfo? {
+            // 不拦截，只是缓存
+            // if (PrivacySentry.Privacy.getBuilder()
+            //         ?.isVisitorModel() == true || PrivacySentry.Privacy.getBuilder()
+            //         ?.isForbiddenAPI("getActiveNetworkInfo") == true
+            // ) {
+            //     doFilePrinter("getActiveNetworkInfo", "获取网络状态对象", bVisitorModel = true)
+            //     return null
+            // }
+
+            // 增加缓存
+            try {
+                val value = CachePrivacyManager.Manager.loadWithTimeCache(
+                    "getActiveNetworkInfo",
+                    "获取网络状态对象",
+                    "NoNetworkInfo",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 5
+                ) {
+                    doFilePrinter(
+                        "getActiveNetworkInfo",
+                        methodDocumentDesc = "获取网络状态对象"
+                    )
+                    val p = connectivityManager.activeNetworkInfo
+                    val byte = p?.let { ParcelableUtil.marshall(it) }
+                    Base64.encodeToString(byte, 0)
+                }
+                val parcel = ParcelableUtil.unmarshall(Base64.decode(value, 0))
+                val networkInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    NetworkInfo.CREATOR.createFromParcel(parcel)
+                } else {
+                    connectivityManager.activeNetworkInfo
+                }
+                if (networkInfo != null) {
+                    PrivacyLog.i("getActiveNetworkInfo :成功从缓存获取对象")
+                    return networkInfo
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            return connectivityManager.activeNetworkInfo
+        }
+
+        // 拦截网络状态-getActiveNetworkInfo
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = ConnectivityManager::class,
+            originalMethod = "getActiveNetwork",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun getActiveNetwork(connectivityManager: ConnectivityManager): Network? {
+            // 不拦截，只是缓存
+            // 增加缓存
+            try {
+                val value = CachePrivacyManager.Manager.loadWithTimeCache(
+                    "getActiveNetwork",
+                    "获取网络状态对象",
+                    "NoNetworkInfo",
+                    String::class,
+                    duration = CacheUtils.Utils.MINUTE * 5
+                ) {
+                    doFilePrinter(
+                        "getActiveNetwork",
+                        methodDocumentDesc = "获取网络状态对象"
+                    )
+                    val p = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        connectivityManager.activeNetwork
+                    } else {
+                        null
+                    }
+                    val byte = p?.let { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        ParcelableUtil.marshall(it)
+                    } else {
+                        null
+                    }
+                    }
+                    Base64.encodeToString(byte, 0)
+                }
+                val parcel = ParcelableUtil.unmarshall(Base64.decode(value, 0))
+                val networkInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Network.CREATOR.createFromParcel(parcel)
+                } else {
+                    null
+                }
+                if (networkInfo != null) {
+                    PrivacyLog.i("getActiveNetwork :成功从缓存获取对象")
+                    return networkInfo
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                connectivityManager.activeNetwork
+            } else {
+                null
+            }
+        }
+
+        // 监听服务启动-startService
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = Context::class,
+            originalMethod = "startService",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun startService(context: Context, intent: Intent): ComponentName? {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true
+            ) {
+                // 判断禁用intent里是否含有指定服务名称
+                val cmp = intent.component?.flattenToShortString()
+                if (cmp?.let { PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it) } == true) {
+                    doFilePrinter(
+                        "startService",
+                        "拦截启动服务：$intent",
+                        bVisitorModel = true
+                    )
+                    return null
+                }
+            }
+            PrivacyLog.i("startService :监听到启动服务-->$intent")
+            return context.startService(intent)
+        }
+
+        // 监听服务绑定-bindService
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = Context::class,
+            originalMethod = "bindService",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun bindService(
+            context: Context,
+            intent: Intent,
+            conn: ServiceConnection,
+            flags: Int
+        ): Boolean? {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true
+            ) {
+                // 判断禁用intent里是否含有指定服务名称
+                val cmp = intent.component?.flattenToShortString()
+                val act = intent.action
+                if (cmp?.let { PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it) } == true
+                    || act?.let {
+                        PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it)
+                    } == true) {
+                    doFilePrinter(
+                        "bindService",
+                        "拦截绑定服务：$intent",
+                        bVisitorModel = true
+                    )
+                    return null
+                }
+            }
+            PrivacyLog.i("bindService :监听到绑定服务-->$intent")
+            return context.bindService(intent, conn, flags)
+        }
+
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = Context::class,
+            originalMethod = "bindService",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun bindService(
+            context: Context,
+            intent: Intent,
+            flags: Int,
+            executor: Executor,
+            conn: ServiceConnection
+        ): Boolean? {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true
+            ) {
+                // 判断禁用intent里是否含有指定服务名称
+                val cmp = intent.component?.flattenToShortString()
+                val act = intent.action
+                if (cmp?.let { PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it) } == true
+                    || act?.let {
+                        PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it)
+                    } == true) {
+                    doFilePrinter(
+                        "bindService",
+                        "拦截绑定服务：$intent",
+                        bVisitorModel = true
+                    )
+                    return null
+                }
+            }
+            PrivacyLog.i("bindService :监听到绑定服务-->$intent")
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.bindService(intent, flags, executor, conn)
+            } else {
+                context.bindService(intent, conn, flags)
+            }
+        }
+
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = AppCompatActivity::class,
+            originalMethod = "bindService",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun bindService(
+            context: AppCompatActivity,
+            intent: Intent,
+            conn: ServiceConnection,
+            flags: Int
+        ): Boolean? {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true
+            ) {
+                // 判断禁用intent里是否含有指定服务名称
+                val cmp = intent.component?.flattenToShortString()
+                val act = intent.action
+                if (cmp?.let { PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it) } == true
+                    || act?.let {
+                        PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it)
+                    } == true) {
+                    doFilePrinter(
+                        "bindService",
+                        "拦截绑定服务：$intent",
+                        bVisitorModel = true
+                    )
+                    return null
+                }
+            }
+            PrivacyLog.i("bindService :监听到绑定服务-->$intent")
+            return context.bindService(intent, conn, flags)
+        }
+
+        @JvmStatic
+        @PrivacyMethodProxy(
+            originalClass = AppCompatActivity::class,
+            originalMethod = "bindService",
+            originalOpcode = MethodInvokeOpcode.INVOKEVIRTUAL
+        )
+        fun bindService(
+            context: AppCompatActivity,
+            intent: Intent,
+            flags: Int,
+            executor: Executor,
+            conn: ServiceConnection
+        ): Boolean? {
+            if (PrivacySentry.Privacy.getBuilder()
+                    ?.isVisitorModel() == true
+            ) {
+                // 判断禁用intent里是否含有指定服务名称
+                val cmp = intent.component?.flattenToShortString()
+                val act = intent.action
+                if (cmp?.let { PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it) } == true
+                    || act?.let {
+                        PrivacySentry.Privacy.getBuilder()?.isForbiddenAPI(it)
+                    } == true) {
+                    doFilePrinter(
+                        "bindService",
+                        "拦截绑定服务：$intent",
+                        bVisitorModel = true
+                    )
+                    return null
+                }
+            }
+            PrivacyLog.i("bindService :监听到绑定服务-->$intent")
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.bindService(intent, flags, executor, conn)
+            } else {
+                context.bindService(intent, conn, flags)
             }
         }
     }
