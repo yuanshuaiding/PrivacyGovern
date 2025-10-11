@@ -158,6 +158,14 @@ class PrivacySentry {
             return !hasShowPrivacy()
         }
 
+        fun foreground(){
+            mBuilder?.configForegroundModel(true)
+        }
+
+        fun background(){
+            mBuilder?.configForegroundModel(false)
+        }
+
         /**
          * 当前写入文件任务是否结束
          * @return Boolean

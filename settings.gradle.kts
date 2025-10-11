@@ -1,4 +1,4 @@
-rootProject.name = "PrivacySentry"
+rootProject.name = "PrivacyGovern"
 
 pluginManagement {
     repositories {
