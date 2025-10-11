@@ -141,7 +141,7 @@
 	buildscript {
 	     dependencies {
 	         // 添加插件依赖
-	         classpath 'com.github.allenymt.PrivacySentry:plugin-sentry:1.3.7_v820_beta4'
+	         classpath 'com.github.yuanshuaiding.PrivacyGovern:plugin-sentry:1.3.7_v820_beta4'
 	     }
 	}
 	
@@ -163,15 +163,15 @@
             // aar依赖
             def privacyVersion = "1.3.7_v820_beta4"
             // 必须引用
-            implementation "com.github.allenymt.PrivacySentry:hook-sentry:$privacyVersion"
+            implementation "com.github.yuanshuaiding.PrivacyGovern:hook-sentry:$privacyVersion"
             // 必须引用
-            implementation "com.github.allenymt.PrivacySentry:privacy-annotation:$privacyVersion"
+            implementation "com.github.yuanshuaiding.PrivacyGovern:privacy-annotation:$privacyVersion"
 
             // 建议引用，配置了常用的敏感函数拦截
-            implementation "com.github.allenymt.PrivacySentry:privacy-proxy:$privacyVersion"
+            implementation "com.github.yuanshuaiding.PrivacyGovern:privacy-proxy:$privacyVersion"
             
             // 废弃
-            implementation "com.github.allenymt.PrivacySentry:privacy-replace:$privacyVersion"
+            implementation "com.github.yuanshuaiding.PrivacyGovern:privacy-replace:$privacyVersion"
         }
         
         // 黑名单配置，可以设置这部分包名不会被修改字节码

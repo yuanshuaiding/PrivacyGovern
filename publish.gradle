@@ -2,7 +2,7 @@ apply plugin: 'maven-publish'
 publishing {
     publications {
         release(MavenPublication) {
-            groupId = 'com.github.allenymt.PrivacySentry'
+            groupId = 'com.github.yuanshuaiding.PrivacyGovern'
             artifactId = project.ARTIFACT_ID
             version = rootProject.ext.publish_config["version"]
             afterEvaluate {

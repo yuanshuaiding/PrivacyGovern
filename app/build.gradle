@@ -72,12 +72,12 @@ dependencies {
         implementation project(":privacy-annotation")
     } else {
         def privacyVersion = rootProject.ext.publish_config['version']
-        implementation "com.github.allenymt.PrivacySentry:hook-sentry:$privacyVersion"
-        implementation "com.github.allenymt.PrivacySentry:privacy-annotation:$privacyVersion"
+        implementation "com.github.yuanshuaiding.PrivacyGovern:hook-sentry:$privacyVersion"
+        implementation "com.github.yuanshuaiding.PrivacyGovern:privacy-annotation:$privacyVersion"
         //  测试自定义拦截就注释掉
-        implementation "com.github.allenymt.PrivacySentry:privacy-proxy:$privacyVersion"
+        implementation "com.github.yuanshuaiding.PrivacyGovern:privacy-proxy:$privacyVersion"
         // 新增类替换，主要是为了hook构造函数的参数
-        implementation "com.github.allenymt.PrivacySentry:privacy-replace:$privacyVersion"
+        implementation "com.github.yuanshuaiding.PrivacyGovern:privacy-replace:$privacyVersion"
     }
     implementation(project(path: ':privacy-test')) {
         exclude module: 'privacy-annotation'
