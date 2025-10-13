@@ -2,12 +2,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply from: '../publish.gradle'  // Changed from 'maven' to 'maven-publish'
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.3"
+    compileSdk 34
     namespace "com.yl.lib.privacy_proxy"
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 30
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
 

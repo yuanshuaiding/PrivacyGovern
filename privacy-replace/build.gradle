@@ -5,11 +5,11 @@ plugins {
 }
 apply from: '../publish.gradle'  // Changed from 'maven' to 'maven-publish'
 android {
-    compileSdkVersion 30
+    compileSdk 34
     namespace "com.yl.lib.privacy_replace"
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 30
+        targetSdkVersion 34
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
