@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.github.yuanshuaiding.PrivacyGovern</groupId>
+  <artifactId>hook-sentry</artifactId>
+  <versioning>
+    <latest>1.3.7.4</latest>
+    <release>1.3.7.4</release>
+    <versions>
+      <version>1.3.7.4</version>
+    </versions>
+    <lastUpdated>20251015035233</lastUpdated>
+  </versioning>
+</metadata>

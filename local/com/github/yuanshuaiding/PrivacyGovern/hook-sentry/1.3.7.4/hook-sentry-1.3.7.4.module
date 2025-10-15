@@ -1,0 +1,108 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.github.yuanshuaiding.PrivacyGovern",
+    "module": "hook-sentry",
+    "version": "1.3.7.4",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "8.2"
+    }
+  },
+  "variants": [
+    {
+      "name": "releaseApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.8.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "hook-sentry-1.3.7.4.aar",
+          "url": "hook-sentry-1.3.7.4.aar",
+          "size": 81566,
+          "sha512": "5418e536ea581cc8c9655ede0abe68572611acf063d265bbb7c819f97b268a08e03f3f9bb34f0e8c94f9401d178676109f542423ae5f916ba2e04144c28eb184",
+          "sha256": "a60ac5f53efac9e603e368670c9340ba923ecaf921fdc2fd540660991fde6b2b",
+          "sha1": "8235053f3bece283628f2acdf23e28dc253d05fe",
+          "md5": "c9cd1297f6654eb8c87fb005df12705c"
+        }
+      ]
+    },
+    {
+      "name": "releaseRuntimeElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "androidJvm"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.core",
+          "module": "core-ktx",
+          "version": {
+            "requires": "1.3.2"
+          }
+        },
+        {
+          "group": "net.sourceforge.jexcelapi",
+          "module": "jxl",
+          "version": {
+            "requires": "2.6.12"
+          },
+          "excludes": [
+            {
+              "group": "*",
+              "module": "log4j"
+            }
+          ]
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-android",
+          "version": {
+            "requires": "1.3.9"
+          }
+        },
+        {
+          "group": "com.google.android.material",
+          "module": "material",
+          "version": {
+            "requires": "1.1.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.8.10"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "hook-sentry-1.3.7.4.aar",
+          "url": "hook-sentry-1.3.7.4.aar",
+          "size": 81566,
+          "sha512": "5418e536ea581cc8c9655ede0abe68572611acf063d265bbb7c819f97b268a08e03f3f9bb34f0e8c94f9401d178676109f542423ae5f916ba2e04144c28eb184",
+          "sha256": "a60ac5f53efac9e603e368670c9340ba923ecaf921fdc2fd540660991fde6b2b",
+          "sha1": "8235053f3bece283628f2acdf23e28dc253d05fe",
+          "md5": "c9cd1297f6654eb8c87fb005df12705c"
+        }
+      ]
+    }
+  ]
+}
